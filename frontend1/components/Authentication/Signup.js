@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import axios from "axios"; // Import Axios for API calls
 import styles from "./SignupStyles";
 import { API_BASE_URL } from "../../apiurl";
-//const API_BASE_URL = "http://your-api-url-here"; // Replace with your backend URL
+
 
 const Signup = ({ navigation }) => {
   const [Username, setUsername] = useState("");
@@ -31,7 +31,7 @@ const Signup = ({ navigation }) => {
             if (role === "Admin") {
               navigation.navigate("AdminHome");
             } else {
-              navigation.navigate("UserHome", { 
+              navigation.navigate("ushomescreen", { 
                 city: city,
                 state: state 
               });

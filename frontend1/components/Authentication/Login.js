@@ -38,7 +38,7 @@ const [state , setState] = useState("summa");
                   navigation.navigate("conhomepage");
                   break;
                 case "User":
-                  navigation.navigate("UserHomeScreen", {
+                  navigation.navigate("ushomescreen", {
                     city: response.data.user.city || 'Unknown City',
                     state: response.data.user.state || 'Unknown State'
                   });
@@ -92,7 +92,7 @@ const [state , setState] = useState("summa");
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
+      <TouchableOpacity onPress={() => navigation.navigate("signup")}>
         <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
       </TouchableOpacity>
     </View>
