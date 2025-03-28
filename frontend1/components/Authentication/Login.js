@@ -49,10 +49,10 @@ const [state , setState] = useState("summa");
                   });
                   break;
                 case "Admin":
-                  console.log(response.data.user.city )
-                  console.log(response.data.user.state )
+                  
                   navigation.navigate("AdminHome", {
                     username: response.data.user.username || 'Unknown Name',
+                    adminId: response.data.user.adminId || 'Unknown Id',
                     city: response.data.user.city || 'Unknown City',
                     state: response.data.user.state || 'Unknown State'
                   });

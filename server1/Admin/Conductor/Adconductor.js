@@ -2,17 +2,28 @@ const express = require("express");
 const router = express.Router();
 const Conductor = require("../../Module/Conductor_sc");
 
+// Add Conductor API
 router.post("/add", async (req, res) => {
   try {
-    let { fullName, phoneNumber, dob, age, gender, userName, password } = req.body;
+    let { Username, phoneNumber, dob, age, gender, password, adminId } = req.body;
 
-    console.log("Received Data:", req.body); // ✅ Log the received data
-
-    if (!fullName || !phoneNumber || !password || !userName) {
-      return res.status(400).json({ error: "Full Name, Phone Number, User Name, and Password are required!" });
+    // Validate required fields
+    if (!Username || !phoneNumber || !password) {
+      return res.status(400).json({ error: "Username, Phone Number, and Password are required!" });
     }
 
-    // ✅ Validate and Convert DOB
+    // Validate phone number (10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      return res.status(400).json({ error: "Invalid phone number! Please enter a valid 10-digit number." });
+    }
+
+    // Validate password (Minimum 6 characters)
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long." });
+    }
+
+    // Validate and parse DOB
     if (dob) {
       const parsedDate = new Date(dob);
       if (isNaN(parsedDate.getTime())) {
@@ -21,14 +32,30 @@ router.post("/add", async (req, res) => {
       dob = parsedDate;
     }
 
-    const newConductor = new Conductor({ fullName, phoneNumber, dob, age, gender, userName, password });
-    await newConductor.save();
+    // Validate age if provided
+    if (age !== undefined) {
+      if (isNaN(age) || age < 18 || age > 80) {
+        return res.status(400).json({ error: "Invalid age! Age should be between 18 and 80." });
+      }
+    }
 
+    // Create and save the conductor
+    const newConductor = new Conductor({
+      Username,
+      phoneNumber,
+      dob,
+      age,
+      gender,
+      password,
+      adminId,
+    });
+
+    await newConductor.save();
+    console.log("sss")
     res.status(201).json({ message: "Conductor added successfully!", conductor: newConductor });
   } catch (error) {
     console.error("Error saving conductor:", error);
 
-    // Send more details to the frontend
     res.status(500).json({ error: error.message || "Internal Server Error", details: error });
   }
 });

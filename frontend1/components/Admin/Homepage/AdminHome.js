@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image, ScrollView, Dimensions } from "react-native";
+import { API_BASE_URL } from "../../../apiurl";
 
-const { width } = Dimensions.get("window");
 
 const AdminHome = ({ navigation, route }) => {
   // Extract admin details from route params
-  const { username = "Admin", city = "Unknown City", state = "Unknown State" } = route.params || {};
+  const { username = "Admin", adminId="NA" ,city = "Unknown City", state = "Unknown State" } = route.params || {};
 
   const [buses, setBuses] = useState([
     { id: "1", busNo: "TN-38-1234", route: "Gandhipuram to Ukkadam", time: "9:00 AM", stops: "Gandhipuram → Peelamedu → Singanallur → Ukkadam", Conductor: "Arun Kumar", status: "Available", expanded: false },
@@ -25,6 +25,28 @@ const AdminHome = ({ navigation, route }) => {
     );
   };
 
+  useEffect(() => {
+    // Fetch data from API
+    const fetchData = async () => {
+      try {
+        const [busResponse, conductorResponse] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus`),
+          axios.get(`${API_BASE_URL}/api/Admin/conductor`),
+        ]);
+
+        setBuses(busResponse.data);
+        setConductors(conductorResponse.data);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const renderHeader = () => (
     <>
       <View style={styles.leftSection}>
@@ -38,10 +60,10 @@ const AdminHome = ({ navigation, route }) => {
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddConductor")}>
+        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddConductor", {adminId})}>
           <Text style={styles.addButtonText}>+ Add Conductor</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddBuses")}>
+        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddBuses", {adminId})}>
           <Text style={styles.addButtonText}>+ Add Bus</Text>
         </TouchableOpacity>
       </View>

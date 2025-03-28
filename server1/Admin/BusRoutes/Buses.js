@@ -87,6 +87,16 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get("/fetchbus", async (req, res) => {
+  try {
+    const conductors = await Bus.find();
+    res.json(conductors);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 router.get("/fetchstate", async (req, res) => {
   try {
     console.log("hi")

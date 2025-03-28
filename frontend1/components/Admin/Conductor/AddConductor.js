@@ -4,9 +4,11 @@ import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
 
-const AddConductor = () => {
-  const [fullName, setFullName] = useState("");
-  const [userName, setUserName] = useState("");
+const AddConductor = ({ navigation, route }) => {
+
+  const { adminId="NA" } = route.params || {};
+
+  const [Username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [dob, setDob] = useState("");
   const [age, setAge] = useState("");
@@ -27,16 +29,16 @@ const AddConductor = () => {
     }
 
     const conductorData = {
-      fullName: fullName.trim(),
+      Username: Username.trim(),
       phoneNumber: phoneNumber.trim(),
       dob: formattedDOB, // ✅ Correctly formatted date
       age: parseInt(age, 10) || null,
       gender: gender,
-      userName: userName.trim(),
       password: password,
+      adminId: adminId,
     };
 
-    console.log("Sending Data:", conductorData); // ✅ Debugging step
+    console.log("Sending Data:", conductorData); 
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/Admin/Conductor/add`, conductorData);
@@ -54,8 +56,8 @@ const AddConductor = () => {
       <TextInput
         style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
         placeholder="Enter Full Name"
-        value={fullName}
-        onChangeText={setFullName}
+        value={Username}
+        onChangeText={setUsername}
       />
 
       <Text>Phone Number *</Text>
@@ -96,14 +98,6 @@ const AddConductor = () => {
           inputAndroid: { borderWidth: 1, padding: 10, marginBottom: 10 },
           inputIOS: { borderWidth: 1, padding: 10, marginBottom: 10 },
         }}
-      />
-
-      <Text>Conductor UserName</Text>
-      <TextInput
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
-        placeholder="Enter UserName"
-        value={userName}
-        onChangeText={setUserName}
       />
 
       <Text>Conductor Password</Text>
