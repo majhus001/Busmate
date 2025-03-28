@@ -35,10 +35,24 @@ const [state , setState] = useState("summa");
               switch (role) {
                
                 case "Conductor":
-                  navigation.navigate("conhomepage");
+                  navigation.navigate("conhomepage", {
+                    username: response.data.user.username || 'Unknown Name',
+                    city: response.data.user.city || 'Unknown City',
+                    state: response.data.user.state || 'Unknown State'
+                  });
                   break;
                 case "User":
                   navigation.navigate("ushomescreen", {
+                    username: response.data.user.username || 'Unknown Name',
+                    city: response.data.user.city || 'Unknown City',
+                    state: response.data.user.state || 'Unknown State'
+                  });
+                  break;
+                case "Admin":
+                  console.log(response.data.user.city )
+                  console.log(response.data.user.state )
+                  navigation.navigate("AdminHome", {
+                    username: response.data.user.username || 'Unknown Name',
                     city: response.data.user.city || 'Unknown City',
                     state: response.data.user.state || 'Unknown State'
                   });

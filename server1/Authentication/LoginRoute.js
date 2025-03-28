@@ -10,18 +10,19 @@ router.post("/login", async (req, res) => {
     let user;
     let Model;
 
-    // Select the appropriate model based on role
+    
     switch (role) {
       case "Conductor":
         Model = Conductor;
-        user = await Model.findOne({ fullName: Username, password }); 
+        user = await Model.findOne({ userName: Username, password }); 
+        console.log("hiii")
         console.log({user})
         break;
       case "Admin":
       case "User":
         Model = User;
         user = await Model.findOne({ 
-          Username,  // Use Username directly as it matches the schema
+          Username,  
           password,
           role
         });
@@ -34,10 +35,12 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials or role" });
     }
 
+    console.log(user.city)
+    console.log(user.state)
     const userResponse = {
       message: "Login successful!",
       user: {
-        Username: user.Username || user.userName, // Handle both field names
+        username: user.Username, 
         role: user.role,
         city: user.city,
         state: user.state

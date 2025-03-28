@@ -29,7 +29,10 @@ const Signup = ({ navigation }) => {
           text: "OK",
           onPress: () => {
             if (role === "Admin") {
-              navigation.navigate("AdminHome");
+              navigation.navigate("AdminHome", { 
+                city: city,
+                state: state 
+              });
             } else {
               navigation.navigate("ushomescreen", { 
                 city: city,

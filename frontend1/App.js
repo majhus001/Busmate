@@ -13,14 +13,19 @@ import UserMap from "./components/Users/Map/UserMap";
 import WelcomeScreen from "./components/WelcomeScreen";
 import Signup from "./components/Authentication/Signup";
 import Login from "./components/Authentication/Login";
+import AdminHome from "./components/Admin/Homepage/AdminHome";
+import AddConductor from "./components/Admin/Conductor/AddConductor";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="ushomescreen">
-        <Stack.Screen name="adbuses" component={AdBuses} />
+      <Stack.Navigator
+        initialRouteName="welcomepage"
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="AddBuses" component={AdBuses} />
         <Stack.Screen name="conhomepage" component={ConHome} />
         <Stack.Screen name="conbusselect" component={BusSelection} />
         <Stack.Screen name="buslogin" component={Buslogin} />
@@ -32,7 +37,9 @@ export default function App() {
         <Stack.Screen name="usmap" component={UserMap} />
         <Stack.Screen name="welcomepage" component={WelcomeScreen} />
         <Stack.Screen name="login" component={Login} />
-        <Stack.Screen name="signup" component={Signup} />
+        <Stack.Screen name="Signup" component={Signup} />
+        <Stack.Screen name="AdminHome" component={AdminHome} />
+        <Stack.Screen name="AddConductor" component={AddConductor} />
       </Stack.Navigator>
     </NavigationContainer>
   );
