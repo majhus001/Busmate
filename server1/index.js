@@ -1,5 +1,4 @@
 const express = require("express");
-const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const buses = require("./Admin/BusRoutes/Buses"); 
@@ -7,12 +6,14 @@ const Etm = require("./Conductor/Ticketbook");
 const busroutes = require("./Conductor/BusRoutes");
 const loginRoutes = require("./Authentication/LoginRoute");
 const SignupRoute = require("./Authentication/SignupRoute");
-const Adconductor = require("./Admin/Conductor/Adconductor");
+const Adconductor = require("./Admin/AdConductor/Adconductor");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const cors = require('cors');
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 

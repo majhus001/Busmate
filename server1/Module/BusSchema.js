@@ -17,5 +17,5 @@ const busSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-module.exports = mongoose.model("Buses", busSchema);
+const Bus = mongoose.model("Buses", busSchema);
+module.exports = Bus;

@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Bus = require("../../Module/BusSchema");
 
-// ✅ Add a new bus
 router.post("/add", async (req, res) => {
   try {
     console.log("Received Bus Data:", req.body); // Debugging log
@@ -89,8 +88,10 @@ router.post("/login", async (req, res) => {
 
 router.get("/fetchbus", async (req, res) => {
   try {
-    const conductors = await Bus.find();
-    res.json(conductors);
+    const buses = await Bus.find();
+
+    console.log(buses)
+    res.json({data: buses});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

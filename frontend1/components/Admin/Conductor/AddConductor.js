@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
+import styles from "./AddConductorStyles"; // Importing the styles
 
 const AddConductor = ({ navigation, route }) => {
-
-  const { adminId="NA" } = route.params || {};
+  const { adminId = "NA" } = route.params || {};
 
   const [Username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -16,14 +16,24 @@ const AddConductor = ({ navigation, route }) => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = async () => {
-    // Validate and format the date properly
+    if (!Username.trim() || !phoneNumber.trim() || !password.trim()) {
+      Alert.alert("Error", "Please fill all required fields.");
+      return;
+    }
+
+    if (phoneNumber.length !== 10) {
+      Alert.alert("Error", "Phone number must be 10 digits.");
+      return;
+    }
+
+    // Validate and format DOB
     let formattedDOB = "";
     if (dob) {
       const parsedDate = new Date(dob);
       if (!isNaN(parsedDate.getTime())) {
-        formattedDOB = parsedDate.toISOString().split("T")[0]; // ✅ Converts to YYYY-MM-DD
+        formattedDOB = parsedDate.toISOString().split("T")[0];
       } else {
-        alert("Invalid Date of Birth. Please enter a valid date (YYYY-MM-DD).");
+        Alert.alert("Error", "Invalid Date of Birth. Please use YYYY-MM-DD format.");
         return;
       }
     }
@@ -31,86 +41,96 @@ const AddConductor = ({ navigation, route }) => {
     const conductorData = {
       Username: Username.trim(),
       phoneNumber: phoneNumber.trim(),
-      dob: formattedDOB, // ✅ Correctly formatted date
+      dob: formattedDOB,
       age: parseInt(age, 10) || null,
       gender: gender,
       password: password,
       adminId: adminId,
     };
 
-    console.log("Sending Data:", conductorData); 
-
     try {
       const response = await axios.post(`${API_BASE_URL}/api/Admin/Conductor/add`, conductorData);
-      console.log("Conductor added successfully!", response.data);
       Alert.alert("Success", "Conductor added successfully!");
+      navigation.navigate()
+      navigation.goBack();
     } catch (error) {
-      console.error("Error adding conductor:", error.response ? error.response.data : error.message);
+      console.error("Error adding conductor:", error);
       Alert.alert("Error", error.response?.data?.error || "Something went wrong");
     }
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text>Full Name *</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Add Conductor</Text>
+
+      {/* Username */}
+      <Text style={styles.label}>Full Name *</Text>
       <TextInput
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        style={styles.input}
         placeholder="Enter Full Name"
         value={Username}
         onChangeText={setUsername}
       />
 
-      <Text>Phone Number *</Text>
+      {/* Phone Number */}
+      <Text style={styles.label}>Phone Number *</Text>
       <TextInput
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        style={styles.input}
         placeholder="Enter Phone Number"
         keyboardType="phone-pad"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
       />
 
-      <Text>Date of Birth</Text>
+      {/* DOB */}
+      <Text style={styles.label}>Date of Birth (YYYY-MM-DD)</Text>
       <TextInput
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
-        placeholder="Enter DOB (YYYY-MM-DD)"
+        style={styles.input}
+        placeholder="Enter DOB"
         value={dob}
         onChangeText={setDob}
       />
 
-      <Text>Age</Text>
+      {/* Age */}
+      <Text style={styles.label}>Age</Text>
       <TextInput
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        style={styles.input}
         placeholder="Enter Age"
         keyboardType="numeric"
         value={age}
         onChangeText={setAge}
       />
 
-      <Text>Gender</Text>
-      <RNPickerSelect
-        onValueChange={(value) => setGender(value)}
-        items={[
-          { label: "Male", value: "Male" },
-          { label: "Female", value: "Female" },
-          { label: "Other", value: "Other" },
-        ]}
-        style={{
-          inputAndroid: { borderWidth: 1, padding: 10, marginBottom: 10 },
-          inputIOS: { borderWidth: 1, padding: 10, marginBottom: 10 },
-        }}
-      />
+      {/* Gender */}
+      <Text style={styles.label}>Gender</Text>
+      <View style={styles.pickerContainer}>
+        <RNPickerSelect
+          onValueChange={(value) => setGender(value)}
+          items={[
+            { label: "Male", value: "Male" },
+            { label: "Female", value: "Female" },
+            { label: "Other", value: "Other" },
+          ]}
+          style={styles.picker}
+          placeholder={{ label: "Select Gender", value: null }}
+        />
+      </View>
 
-      <Text>Conductor Password</Text>
+      {/* Password */}
+      <Text style={styles.label}>Conductor Password *</Text>
       <TextInput
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        style={styles.input}
         placeholder="Enter Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      <Button title="Add Conductor" onPress={handleSubmit} />
-    </View>
+      {/* Submit Button */}
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <Text style={styles.submitButtonText}>Add Conductor</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 

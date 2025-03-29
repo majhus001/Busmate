@@ -60,4 +60,14 @@ router.post("/add", async (req, res) => {
   }
 });
 
+router.get("/fetchconductor", async (req, res) => {
+  try {
+    const conductors = await Conductor.find();
+    console.log({data:conductors})
+    res.json({data:conductors});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

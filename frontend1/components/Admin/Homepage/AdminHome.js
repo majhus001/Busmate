@@ -1,44 +1,54 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image, ScrollView, Dimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  TextInput,
+} from "react-native";
+import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
-
+import styles from "./AdminHomeStyles";
 
 const AdminHome = ({ navigation, route }) => {
-  // Extract admin details from route params
-  const { username = "Admin", adminId="NA" ,city = "Unknown City", state = "Unknown State" } = route.params || {};
+  const {
+    username = "Admin",
+    adminId = "NA",
+    city = "Unknown City",
+    state = "Unknown State",
+  } = route.params || {};
 
-  const [buses, setBuses] = useState([
-    { id: "1", busNo: "TN-38-1234", route: "Gandhipuram to Ukkadam", time: "9:00 AM", stops: "Gandhipuram → Peelamedu → Singanallur → Ukkadam", Conductor: "Arun Kumar", status: "Available", expanded: false },
-    { id: "2", busNo: "TN-66-5678", route: "RS Puram to Avinashi", time: "10:30 AM", stops: "RS Puram → Gandhipuram → Saravanampatti → Avinashi", Conductor: "Vijay Anand", status: "On Service", expanded: false },
-    { id: "3", busNo: "TN-37-9876", route: "Town Hall to Vadavalli", time: "12:00 PM", stops: "Town Hall → Ukkadam → Saibaba Colony → Vadavalli", Conductor: "Karthik Raj", status: "Available", expanded: false },
-  ]);
-
-  const conductors = [
-    { id: "1", name: "Sathish Kumar", contact: "9876543210", status: "Active" },
-    { id: "2", name: "Murugan M", contact: "9876543211", status: "On Leave" },
-    { id: "3", name: "Karthikeyan S", contact: "9876543212", status: "Active" },
-  ];
+  const [buses, setBuses] = useState([]);
+  const [conductors, setConductors] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [selectedTab, setSelectedTab] = useState("Buses");
+  const busesPerPage = 5;
 
   const toggleDropdown = (id) => {
     setBuses((prevBuses) =>
-      prevBuses.map((bus) => (bus.id === id ? { ...bus, expanded: !bus.expanded } : bus))
+      prevBuses.map((bus) =>
+        bus._id === id ? { ...bus, expanded: !bus.expanded } : bus
+      )
     );
   };
 
   useEffect(() => {
-    // Fetch data from API
     const fetchData = async () => {
       try {
         const [busResponse, conductorResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus`),
-          axios.get(`${API_BASE_URL}/api/Admin/conductor`),
+          axios.get(`${API_BASE_URL}/api/Admin/conductor/fetchconductor`),
         ]);
 
-        setBuses(busResponse.data);
-        setConductors(conductorResponse.data);
+        setBuses(
+          busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
+        );
+        setConductors(conductorResponse.data.data);
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError("Failed to load data. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -47,106 +57,246 @@ const AdminHome = ({ navigation, route }) => {
     fetchData();
   }, []);
 
-  const renderHeader = () => (
-    <>
+  const handleNextPage = () => {
+    if ((currentPage + 1) * busesPerPage < buses.length) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Search and Pagination Logic
+  const filteredBuses = buses.filter((bus) => {
+    const searchLower = searchQuery.toLowerCase();
+
+    return (
+      bus.busNo?.toString().toLowerCase().startsWith(searchLower) ||
+      bus.fromStage?.toString().toLowerCase().startsWith(searchLower) ||
+      bus.toStage?.toString().toLowerCase().startsWith(searchLower)
+    );
+  });
+
+  const paginatedBuses = filteredBuses.slice(
+    currentPage * busesPerPage,
+    (currentPage + 1) * busesPerPage
+  );
+
+  const filteredConductors = conductors.filter((conductor) =>
+    conductor.Username.toLowerCase().startsWith(searchQuery.toLowerCase())
+  );
+
+  return (
+    <ScrollView style={styles.Admincontainer}>
+      {/* Header Section */}
       <View style={styles.leftSection}>
         <Image
-          source={{ uri: "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain" }}
+          source={{
+            uri: "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+          }}
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>{username}</Text>
         <Text style={styles.profileRole}>Administrator</Text>
-        <Text style={styles.profileDetail}>📍 {city}, {state}</Text>
+        <Text style={styles.profileDetail}>
+          📍 {city}, {state}
+        </Text>
+        <View style={styles.busconinfo}>
+          <Text style={styles.busconbtn}>Total buses : {buses.length}</Text>
+          <Text style={styles.busconbtn}>
+            Total conductors: {conductors.length}
+          </Text>
+        </View>
       </View>
 
+      {/* Action Buttons */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddConductor", {adminId})}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("AddConductor", { adminId })}
+        >
           <Text style={styles.addButtonText}>+ Add Conductor</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddBuses", {adminId})}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("AddBuses", { adminId })}
+        >
           <Text style={styles.addButtonText}>+ Add Bus</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Available Buses</Text>
-    </>
-  );
+      {/* Toggle Buttons for Buses and Conductors */}
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            selectedTab === "Buses" ? styles.activeTab : null,
+          ]}
+          onPress={() => setSelectedTab("Buses")}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              selectedTab === "Buses" ? styles.activeTabText : null,
+            ]}
+          >
+            Buses
+          </Text>
+        </TouchableOpacity>
 
-  const renderBusItem = ({ item }) => (
-    <View style={styles.busCard}>
-      <TouchableOpacity onPress={() => toggleDropdown(item.id)} style={styles.busHeader}>
-        <Text style={styles.busText}>Bus No: {item.busNo}</Text>
-        <Text style={styles.busText}>Route: {item.route}</Text>
-        <Text style={styles.busText}>Time: {item.time}</Text>
-        <Text style={[styles.status, item.status === "Available" ? styles.available : styles.onService]}>
-          {item.status}
-        </Text>
-      </TouchableOpacity>
-      {item.expanded && (
-        <View style={styles.dropdown}>
-          <Text style={styles.dropdownText}>Stops: {item.stops}</Text>
-          <Text style={styles.dropdownText}>Available Seats: {Math.floor(Math.random() * 40) + 10}</Text>
-          <Text style={styles.dropdownText}>Conductor: {item.Conductor}</Text>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            selectedTab === "Conductors"
+              ? styles.activeTab
+              : styles.toggleButtonText,
+          ]}
+          onPress={() => setSelectedTab("Conductors")}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              selectedTab === "Conductors"
+                ? styles.activeTabText
+                : styles.toggleButtonText,
+            ]}
+          >
+            Conductors
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder={`Search ${
+          selectedTab === "Buses" ? "Buses by Bus No" : "Conductors by Name"
+        }`}
+        onChangeText={setSearchQuery}
+        value={searchQuery}
+      />
+
+      {/* Conditional Rendering */}
+      {selectedTab === "Buses" ? (
+        <>
+          <Text style={styles.sectionTitle}>Available Buses</Text>
+          {paginatedBuses.length > 0 ? (
+            paginatedBuses.map((item) => (
+              <View key={item._id} style={styles.busCard}>
+                <TouchableOpacity
+                  onPress={() => toggleDropdown(item._id)}
+                  style={styles.busHeader}
+                >
+                  <Text style={styles.busText}>
+                    Route No: {item.busRouteNo}
+                  </Text>
+                  <Text style={styles.busText}>
+                    From: {item.fromStage} ➡️ To: {item.toStage}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.status,
+                      item.status === "Available"
+                        ? styles.available
+                        : styles.onService,
+                    ]}
+                  >
+                    {item.status || "Unknown Status"}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Expandable Section */}
+                {item.expanded && (
+                  <View style={styles.dropdown}>
+                    <Text style={styles.dropdownText}>
+                      Bus No: {item.busNo}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      Bus Type: {item.busType}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      Total Seats: {item.totalSeats}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      State: {item.state}, City: {item.city}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      Shifts: {item.totalShifts}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      Timings: {item.timings?.morning || "N/A"} |{" "}
+                      {item.timings?.evening || "N/A"}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      Prices: Adult - ₹{item.prices?.adult || "N/A"}, Child - ₹
+                      {item.prices?.child || "N/A"}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      Bus Password: {item.busPassword || "Not Set"}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noDataText}>No Buses Found</Text>
+          )}
+
+          {/* Pagination */}
+          <View style={styles.paginationContainer}>
+            <TouchableOpacity
+              style={[
+                styles.paginationButton,
+                currentPage === 0 && styles.disabledButton,
+              ]}
+              onPress={handlePrevPage}
+              disabled={currentPage === 0}
+            >
+              <Text style={styles.paginationButtonText}>Previous</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paginationButton,
+                (currentPage + 1) * busesPerPage >= filteredBuses.length &&
+                  styles.disabledButton,
+              ]}
+              onPress={handleNextPage}
+              disabled={
+                (currentPage + 1) * busesPerPage >= filteredBuses.length
+              }
+            >
+              <Text style={styles.paginationButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : (
+        <View style={styles.rightSection}>
+          <Text style={styles.sectionTitle}>List of Conductors</Text>
+          {filteredConductors.length > 0 ? (
+            filteredConductors.map((conductor) => (
+              <View key={conductor._id} style={styles.conductorCard}>
+                <Text style={styles.conductorName}>
+                  👤 {conductor.Username}
+                </Text>
+                <Text style={styles.conductorContact}>
+                  📞 {conductor.phoneNumber}
+                </Text>
+                <Text style={styles.conductorContact}>
+                  ⚧ Gender: {conductor.gender || "Not Specified"}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noDataText}>No Conductors Found</Text>
+          )}
         </View>
       )}
-    </View>
-  );
-
-  const renderFooter = () => (
-    <View style={styles.rightSection}>
-      <Text style={styles.sectionTitle}>List of Conductors</Text>
-      {conductors.map((conductor) => (
-        <View key={conductor.id} style={styles.conductorCard}>
-          <Text style={styles.conductorName}>{conductor.name}</Text>
-          <Text style={styles.conductorContact}>{conductor.contact}</Text>
-          <Text style={[styles.conductorStatus, conductor.status === "Active" ? styles.active : styles.onLeave]}>
-            {conductor.status}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-
-  return (
-    <FlatList
-      ListHeaderComponent={renderHeader}
-      data={buses}
-      keyExtractor={(item) => item.id}
-      renderItem={renderBusItem}
-      ListFooterComponent={renderFooter}
-    />
+    </ScrollView>
   );
 };
 
 export default AdminHome;
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa", padding: 20 },
-  leftSection: { alignItems: "center", marginBottom: 20 },
-  profileImage: { width: 100, height: 100, borderRadius: 50, borderWidth: 2, borderColor: "#007bff" },
-  profileName: { fontSize: 18, fontWeight: "bold" },
-  profileRole: { fontSize: 14, color: "gray" },
-  profileDetail: { fontSize: 14, color: "gray", marginBottom: 5 },
-  
-  buttonContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  addButton: { backgroundColor: "#28a745", paddingVertical: 10, paddingHorizontal: 15, borderRadius: 8 },
-  addButtonText: { color: "#fff", fontWeight: "bold" },
-
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-
-  busCard: { backgroundColor: "#007bff", borderRadius: 10, marginBottom: 10, padding: 10 },
-  busHeader: { padding: 10 },
-  busText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  status: { fontSize: 14, fontWeight: "bold", textAlign: "right" },
-  available: { color: "#28a745" },
-  onService: { color: "#ffc107" },
-  dropdown: { marginTop: 5, backgroundColor: "#e9ecef", padding: 10, borderRadius: 8 },
-
-  rightSection: { backgroundColor: "#fff", padding: 15, borderRadius: 10 },
-  conductorCard: { padding: 10, borderBottomWidth: 1, borderBottomColor: "#ddd" },
-  conductorName: { fontSize: 16, fontWeight: "bold" },
-  conductorContact: { fontSize: 14, color: "gray" },
-  conductorStatus: { fontSize: 14, fontWeight: "bold", textAlign: "right" },
-  active: { color: "#28a745" },
-  onLeave: { color: "#dc3545" },
-});
